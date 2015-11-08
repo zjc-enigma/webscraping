@@ -44,6 +44,7 @@ cachefile = "cache/" + str(pageNum) +".cache"
 finishedUrl = []
 cacheIn = open(cachefile)
 for line in cacheIn:
+    line = line.strip('\r\n')
     line = line.strip('\n')
     finishedUrl.append(line)
 cacheIn.close()
@@ -54,7 +55,7 @@ cacheOut = open(cachefile, 'a')
 try:
     for string in hreflist:
         Encoding = True
-        detailurl = string['href']
+        detailurl = string[r'href']
         s = re.search(r'CPMX', detailurl)
         if not s:
             continue
@@ -76,21 +77,20 @@ try:
 
             print "reload url"
             content = br.reload().read()
-            detailsoup = BeautifulSoup(content,  from_encoding="gb2312")
+            detailsoup = BeautifulSoup(content)
 
         print "html parsing by soup"
-        tablelist = detailsoup.find_all('table')
+        tablelist = detailsoup.find_all(r'table')
         table = tablelist[0]
 
 
-        trlist = table.find_all('tr')
+        trlist = table.find_all(r'tr')
         print "find tr total number :" + str(len(trlist))
         if(len(trlist) < 3):
-            content = re.sub("</html>","",content,flags=re.S|re.IGNORECASE)+"</html>"
-
-            detailsoup = BeautifulSoup(content, "xml", from_encoding="gb2312")
+#            content = re.sub("</html>","",content,flags=re.S|re.IGNORECASE)+"</html>"
+            detailsoup = BeautifulSoup(content, "xml", from_encoding="gb18030")
             encoding  = False
-            trlist = detailsoup.find_all('tr')
+            trlist = detailsoup.find_all(r'tr')
             # for f in trlist:
             #     print f
             #     print "----------------------------------"
@@ -111,40 +111,40 @@ try:
 
         # ----------- product ---------------
         print "parsing product info"
-        productTd = trlist[productRow].find_all('td')
+        productTd = trlist[productRow].find_all(r'td')
         licenseNum = productTd[1].get_text()
         productName = productTd[3].get_text()
 
         # ----------- company ---------------
         print "parsing company info"
-        companyTd = trlist[companyRow].find_all('td')
+        companyTd = trlist[companyRow].find_all(r'td')
         companyName = companyTd[1].get_text()
         toxicity = companyTd[3].get_text()
 
         # ----------- percent ---------------
         print "parsing percent info"
-        percentTd = trlist[percentRow].find_all('td')
+        percentTd = trlist[percentRow].find_all(r'td')
         percent = percentTd[1].get_text()
 
         # ----------- date ---------------
         print "parsing date info"
-        dateTd = trlist[dateRow].find_all('td')
+        dateTd = trlist[dateRow].find_all(r'td')
         date = dateTd[1].get_text()
         form = dateTd[3].get_text()
 
         # ----------- corp ---------------
         print "parsing corp info"
-        corpTd = trlist[corpRow].find_all('td')
+        corpTd = trlist[corpRow].find_all(r'td')
         del corpTd[0:5]
         corpNameList = []
         corpDiseaseList = []
         corpQuantityList = []
         corpUsageList = []
-        res = ""
-        corpName = "-"
-        diseaseName = "-"
-        quantity = "-"
-        usage = "-"
+        res = r""
+        corpName = r"-"
+        diseaseName = r"-"
+        quantity = r"-"
+        usage = r"-"
 
         while(len(corpTd)):
             corpNameList.append(corpTd.pop(0).get_text())
@@ -152,19 +152,17 @@ try:
             corpQuantityList.append(corpTd.pop(0).get_text())
             corpUsageList.append(corpTd.pop(0).get_text())
 
-            corpName = '/'.join(corpNameList)
-            diseaseName = '/'.join(corpDiseaseList)
-            quantity = '/'.join(corpQuantityList)
-            usage = '/'.join(corpUsageList)
+            corpName = r'/'.join(corpNameList)
+            diseaseName = r'/'.join(corpDiseaseList)
+            quantity = r'/'.join(corpQuantityList)
+            usage = r'/'.join(corpUsageList)
 
         print "generating result"
-        res = licenseNum + '\t' + productName + '\t' + companyName + '\t' + toxicity + '\t' + percent + '\t' + date.replace('-', '\t') + '\t' + form + '\t' + corpName + '\t' + diseaseName + '\t' + quantity + '\t' + usage + '\n'
-
+        res = licenseNum + '\t' + productName + '\t' + companyName + '\t' + toxicity + '\t' + percent + '\t' + date.replace(r'-', '\t') + '\t' + form + '\t' + corpName + '\t' + diseaseName + '\t' + quantity + '\t' + usage + '\n'
 
         print "writing into result file"
-        #        res.encode("gb2312")
-        #        out.write(res.encode("gb2312"))
-        out.write(res)
+
+        out.write(res.encode('gb18030'))
         cacheOut.write(detailurl+'\n')
         print "result writing finished"
 except Exception, e:
